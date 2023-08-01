@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-package client
+package loader
 
 import (
 	"context"
@@ -27,33 +27,33 @@ import (
 var _ Loader = (*PathLoader)(nil)
 
 type PathLoader struct {
-	rootCA     string
-	clientCert string
-	clientKey  string
+	caPath   string
+	certPath string
+	keyPath  string
 }
 
-func NewPathLoader(rootCA string, clientCert string, clientKey string) *PathLoader {
+func NewPathLoader(caPath string, certPath string, keyPath string) *PathLoader {
 	return &PathLoader{
-		rootCA:     rootCA,
-		clientCert: clientCert,
-		clientKey:  clientKey,
+		caPath:   caPath,
+		certPath: certPath,
+		keyPath:  keyPath,
 	}
 }
 
 func (p *PathLoader) RootCA(_ context.Context) (*x509.CertPool, error) {
 	rootCAPool := x509.NewCertPool()
-	rootCAPEM, err := os.ReadFile(p.rootCA)
+	rootCAPEM, err := os.ReadFile(p.caPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read root CA: %w", err)
+		return nil, fmt.Errorf("failed to read ca certificate: %w", err)
 	}
 	rootCAPool.AppendCertsFromPEM(rootCAPEM)
 	return rootCAPool, nil
 }
 
-func (p *PathLoader) ClientCertificate(_ context.Context) (*tls.Certificate, error) {
-	cert, err := tls.LoadX509KeyPair(p.clientCert, p.clientKey)
+func (p *PathLoader) Certificate(_ context.Context) (*tls.Certificate, error) {
+	cert, err := tls.LoadX509KeyPair(p.certPath, p.keyPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load client certificate and key: %w", err)
+		return nil, fmt.Errorf("failed to load certificate and key: %w", err)
 	}
 
 	return &cert, nil
